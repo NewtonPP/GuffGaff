@@ -32,31 +32,37 @@ io.on("connection", (socket) =>{
 
             const ROOM_ID = user1+user2
             Rooms.push({ROOM_ID, user1, user2})
+            
+            user1?.emit("createOffer", {ROOM_ID, user2:user2.id})
+            user1?.emit("NewUser")
 
-            user1.emit("createOffer", {ROOM_ID, user2:user2.id})
         }
     })
 
 
     socket.on("offer", ({user2, offer})=>{
         const ToSend = users.find(x => x.id === user2)
-        ToSend.emit("offer", ({offer, From:socket.id}))
+        ToSend?.emit("offer", ({offer, From:socket.id}))
     })
 
     socket.on("answer", ({answer, To})=>{
         const ToSend = users.find(x => x.id === To)
-        ToSend.emit("answer", ({answer}))
+        ToSend?.emit("answer", ({answer}))
     })
     
     socket.on("negoNeeded", ({offer, user2}) => {
-        console.log(user2)
         const ToSend = users.find(x => x.id === user2)
-        ToSend.emit("negoNeeded", ({offer, From:socket.id}))
+        ToSend?.emit("negoNeeded", ({offer, From:socket.id}))
     })
 
     socket.on("negoDone", ({answer, To}) => {
         const ToSend = users.find(x => x.id === To)
-        ToSend.emit("negoFinal", ({answer}))
+        ToSend?.emit("negoFinal", ({answer}))
+    })
+
+    socket.on("newMessage", ({sendingMessage, RemoteUser}) => {
+        const ToSend = users.find(x => x.id === RemoteUser)
+        ToSend?.emit("newMessage", {sendingMessage, RemoteUser})
     })
 
 })

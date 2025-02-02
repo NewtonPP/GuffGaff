@@ -14,19 +14,33 @@ const Chat = () => {
   const [remoteStream, setRemoteStream] = useState();
   const [RemoteUser, setRemoteUser] = useState();
 
+  const [Messages, setMessages] = useState([])
+  const [sendingMessage, setSendingMessage] = useState("")
+
+  const [isStarted, setIsStarted] = useState(false)
+  const [isNewUser, setIsNewUser] = useState(false)
+
+  useEffect(()=>{
+    async function AccessCamera () {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
+      setMyStream(stream);
+    }
+
+    AccessCamera()
+  })
+
   // Function to start the connection
   const HandleStart = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: true,
-    });
-    setMyStream(stream);
     socket.emit("start");
   };
 
   useEffect(() => {
     socket.on("createOffer", async ({ ROOM_ID, user2 }) => {
       setRemoteUser(user2);
+      setIsNewUser(true)
       const offer = await CreateOffer();
       console.log("Created Offer", offer);
       socket.emit("offer", { offer, user2 });
@@ -34,6 +48,7 @@ const Chat = () => {
 
     socket.on("offer", async ({ offer, From }) => {
       setRemoteUser(From);
+      setIsNewUser(true)
       const answer = await CreateAnswer(offer);
       console.log("Received offer", offer);
       socket.emit("answer", { answer, To: From });
@@ -76,6 +91,7 @@ const Chat = () => {
 
   const HandleNegoNeeded = async () => {
     const offer = await CreateOffer();
+    console.log("NegotiationSent")
     socket.emit("negoNeeded", { offer, user2: RemoteUser });
   };
 
@@ -89,6 +105,7 @@ const Chat = () => {
   const HandleIncomingNego = async ({ offer, From }) => {
     try {
       const answer = await CreateAnswer(offer);
+      console.log("Incoming Nego")
       socket.emit("negoDone", { answer, To: From });
     } catch (error) {
       console.log("Error Handling NegotiationIncoming");
@@ -98,11 +115,32 @@ const Chat = () => {
   const HandleNegoDone = async ({ answer }) => {
     try {
       pc.setRemoteDescription(answer);
+      console.log("FinalNego")
     } catch (error) {
       console.error("Error finalizing negotiation:", error);
     }
   };
 
+
+  //Hadle Messages from this part
+  const HandleMessages = (e) =>{
+    setMessages((prev)=>([...prev, {user:socket.id, message:sendingMessage, state:"sent"}]))
+    socket.emit("newMessage", {sendingMessage, RemoteUser})
+    setSendingMessage("")
+  }
+
+  useEffect(()=>{
+    socket.on("newMessage", ({sendingMessage, RemoteUser}) => {
+      console.log("This is remote user",RemoteUser)
+      setMessages((prev)=>([...prev, {user:RemoteUser, message:sendingMessage, state:"received"}]))
+       
+    })
+
+    return () => {
+      socket.off("newMessage")
+    }
+  },[socket])
+  
   return (
     <>
     <div className="h-screen w-full flex items-center justify-center">
@@ -114,16 +152,19 @@ const Chat = () => {
             {myStream ? (
               <ReactPlayer playing muted height="100%" width="100%" url={myStream} />
             ) : (
-              <p className="text-white">Waiting for Video...</p>
+              <p className="text-white">Camera Permission required
+              to START the chat</p>
             )}
           </div>
 
           <div className="h-[300px] w-[400px] bg-black rounded-lg shadow-lg flex items-center justify-center">
             {remoteStream ? (
               <ReactPlayer playing muted height="100%" width="100%" url={remoteStream} />
-            ) : (
-              <p className="text-white">Waiting for Remote Video...</p>
-            )}
+            ) : isStarted && !remoteStream ? (
+              <p className="text-white">Searching for user</p>
+            ):isNewUser ? (
+              <p className="text-white">New User Joined</p>
+            ):(<p className="text-white">Press Start to begin</p>)}
           </div>
         </div>
 
@@ -147,14 +188,35 @@ const Chat = () => {
         </div>
       </div>
         
-      <div className="h-full w-[30%] bg-gray-900">
-            <div className="bg-gray-700 h-[90%] w-full">
 
-            </div>
-            <div className="flex items-center justify-center gap-2 mt-2">
-              <input className="w-[80%] h-10 bg-slate-300 px-4 rounded-xl" placeholder="Send Message"></input>
-              <button className="h-10 w-10 bg-slate-300 rounded-full flex items-center justify-center"><IoIosSend /></button>
-            </div>
+      <div className="h-full w-[30%] bg-gray-900">
+      {/* Messages Container */}
+      <div className="bg-gray-700 h-[90%] w-full flex flex-col justify-end gap-1 overflow-y-auto p-2">
+        {Messages.map((message, index) => (
+          <div key={index} className={`flex ${message.state === "sent" ? "justify-end" : "justify-start"}`}>
+            <span className={`p-2 rounded-xl text-white ${message.state === "sent" ? "bg-blue-500" : "bg-gray-500"}`}>
+              {message.message}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Input Box */}
+      <div className="flex items-center justify-between p-2 bg-gray-800">
+        <input
+          className="flex-grow h-10 bg-slate-300 px-4 rounded-xl outline-none"
+          placeholder="Send Message"
+          onChange={(e) => setSendingMessage(e.target.value)}
+          value={sendingMessage}
+        />
+        <button
+          className="h-10 w-10 bg-blue-500 text-white rounded-full flex items-center justify-center"
+          onClick={HandleMessages}
+        >
+          <IoIosSend />
+        </button>
+     
+    </div>
       </div>
 
 
