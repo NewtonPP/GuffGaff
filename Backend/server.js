@@ -14,23 +14,27 @@ app.listen(4000, () => {
 
 io.listen(4001)
 
-const queue = []
-const users = []
-const Rooms = []
+let queue = []
+let users = []
+let Rooms = []
+const BlackListedUsers = []
 
+let ROOM;
 io.on("connection", (socket) =>{
     socket.on("start", () => {
         users.push(socket)
         queue.push(socket.id)
 
         if (queue.length >= 2) {
-            const id1 = queue.shift()
-            const id2 = queue.shift()
-
+            let id1 = queue.shift()
+            let id2 = queue.shift()
+            
             const user1 = users.find(x => x.id === id1)
             const user2 = users.find(x => x.id === id2)
 
-            const ROOM_ID = user1+user2
+            const ROOM_ID = id1+id2
+            ROOM = ROOM_ID
+            socket.join(ROOM_ID)
             Rooms.push({ROOM_ID, user1, user2})
             
             user1?.emit("createOffer", {ROOM_ID, user2:user2.id})
@@ -65,4 +69,42 @@ io.on("connection", (socket) =>{
         ToSend?.emit("newMessage", {sendingMessage, RemoteUser})
     })
 
+    socket.on("next",()=>{
+        const ConnectedUsers = users.filter(x => x.id === socket.id)
+        users = ConnectedUsers
+
+        users.push(socket)
+        queue.push(socket.id)
+
+        if (queue.length >= 2) {
+            let id1 = queue.shift()
+            let id2 = queue.shift()
+            
+            const user1 = users.find(x => x.id === id1)
+            const user2 = users.find(x => x.id === id2)
+
+            const ROOM_ID = id1+id2
+            ROOM = ROOM_ID
+            socket.join(ROOM_ID)
+            Rooms.push({ROOM_ID, user1, user2})
+            
+            user1?.emit("createOffer", {ROOM_ID, user2:user2.id})
+            user1?.emit("NewUser")
+
+        }
+    })
+
+    // socket.on("disconnect",()=>{
+    //     // const ConnectedUsers = users.filter(x => x.id === socket.id)
+    //     // users = ConnectedUsers
+    //     // BlackListedUsers.push(socket.id)
+    //     const DisconnectedRoom = Rooms.find(x => x.ROOM_ID === ROOM) 
+    //     if(DisconnectedRoom?.user1?.id === socket.id){
+    //         queue.push(DisconnectedRoom?.user2?.id)
+    //     }
+    //     else{
+    //         queue.push(DisconnectedRoom?.user1?.id)
+    //     }
+    //     socket.broadcast.to(ROOM).emit("disconnected")
+    // })
 })
