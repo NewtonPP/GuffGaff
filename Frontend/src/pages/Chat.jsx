@@ -52,7 +52,7 @@ const InputBox = ({ sendingMessage, setSendingMessage, handleMessages }) => (
 
 const Chat = () => {
   const { socket } = useContext(socketContext);
-  const { pc, CreateAnswer, CreateOffer, resetPeerConnection} = useContext(peerContext);
+  const { pc, CreateAnswer, CreateOffer, resetPeerConnection } = useContext(peerContext);
 
   const [myStream, setMyStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
@@ -64,8 +64,7 @@ const Chat = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [isNegotiating, setIsNegotiating] = useState(false);
-  
-  const [isNext, setIsNext] = useState(false)
+  const [isNext, setIsNext] = useState(false);
 
   // Access the user's camera and microphone
   useEffect(() => {
@@ -93,10 +92,9 @@ const Chat = () => {
   // Add local stream to PeerConnection
   useEffect(() => {
     if (myStream && pc) {
-      for (const track of myStream.getTracks()) {
+      myStream.getTracks().forEach((track) => {
         pc.addTrack(track, myStream);
-        console.log("Added local track:", track);
-      }
+      });
     }
   }, [myStream, pc]);
 
@@ -104,7 +102,6 @@ const Chat = () => {
   useEffect(() => {
     const handleTrackEvent = (ev) => {
       if (ev.streams && ev.streams.length > 0) {
-        console.log("Received remote stream:", ev.streams[0]);
         setRemoteStream(ev.streams[0]);
       }
     };
@@ -117,14 +114,16 @@ const Chat = () => {
   }, [pc]);
 
   // Function to start the connection
-  const handleStart = async () => {
+
+  const handleStart = useCallback(async () => {
+
     try {
       setIsStarted(true);
       socket.emit("start");
     } catch (error) {
       console.error("Error starting connection:", error);
     }
-  };
+  }, [socket]);
 
   // Handle socket events
   useEffect(() => {
@@ -135,7 +134,6 @@ const Chat = () => {
 
       try {
         const offer = await CreateOffer();
-        console.log("Created Offer", offer);
         socket.emit("offer", { offer, user2 });
       } catch (error) {
         console.error("Error creating offer:", error);
@@ -148,7 +146,6 @@ const Chat = () => {
       setIsStarted(false);
 
       try {
-        console.log("Received offer", offer);
         const answer = await CreateAnswer(offer);
         socket.emit("answer", { answer, To: From });
       } catch (error) {
@@ -159,7 +156,6 @@ const Chat = () => {
     const handleAnswer = async ({ answer }) => {
       try {
         await pc.setRemoteDescription(answer);
-        console.log("Received answer", answer);
       } catch (error) {
         console.error("Error setting remote description:", error);
       }
@@ -174,7 +170,6 @@ const Chat = () => {
 
         const answer = await CreateAnswer(offer);
         await pc.setLocalDescription(answer);
-        console.log("Incoming Nego");
         socket.emit("negoDone", { answer, To: From });
       } catch (error) {
         console.error("Error handling incoming negotiation:", error);
@@ -184,7 +179,6 @@ const Chat = () => {
     const handleNegoDone = async ({ answer }) => {
       try {
         await pc.setRemoteDescription(answer);
-        console.log("FinalNego: Remote description set successfully");
       } catch (error) {
         console.error("Error finalizing negotiation:", error);
       }
@@ -192,27 +186,26 @@ const Chat = () => {
 
     const handleDisconnect = () => {
       alert("Other User Disconnected");
-
     };
 
     const handleEnd = () => {
-    setRemoteStream(null);
-    setRemoteUser(null);
-    setIsStarted(true);
-    setIsNewUser(false);
-    setIsNext(false);
-    setMessages([]);
-    }
-
-    const HandleNext = () =>{
       setRemoteStream(null);
       setRemoteUser(null);
       setIsStarted(true);
       setIsNewUser(false);
       setIsNext(false);
       setMessages([]);
-      socket.emit("start")
-    }
+    };
+
+    // const handleNext = () => {
+    //   setRemoteStream(null);
+    //   setRemoteUser(null);
+    //   setIsStarted(true);
+    //   setIsNewUser(false);
+    //   setIsNext(false);
+    //   setMessages([]);
+    //   socket.emit("start");
+    // };
 
     socket.on("createOffer", handleCreateOffer);
     socket.on("offer", handleOffer);
@@ -220,24 +213,24 @@ const Chat = () => {
     socket.on("negoNeeded", handleNegoNeeded);
     socket.on("negoFinal", handleNegoDone);
     socket.on("disconnected", handleDisconnect);
-    socket.on("end", handleEnd)
-    socket.on("next",HandleNext)
+    socket.on("end", handleEnd);
+    // socket.on("next", handleNext);
 
     return () => {
       socket.off("createOffer", handleCreateOffer);
       socket.off("offer", handleOffer);
       socket.off("answer", handleAnswer);
       socket.off("negoNeeded", handleNegoNeeded);
-      socket.off("negoDone", handleNegoDone);
+      socket.off("negoFinal", handleNegoDone);
       socket.off("disconnected", handleDisconnect);
-      socket.off("next",HandleNext);
+      socket.off("end", handleEnd);
+      // socket.off("next", handleNext);
     };
   }, [socket, pc, CreateOffer, CreateAnswer]);
 
   // Handle negotiation needed
   const handleNegoNeeded = useCallback(async () => {
     if (isNegotiating) {
-      console.log("Negotiation already in progress");
       return;
     }
 
@@ -246,7 +239,6 @@ const Chat = () => {
     try {
       const offer = await CreateOffer();
       await pc.setLocalDescription(offer);
-      console.log("NegotiationSent");
       socket.emit("negoNeeded", { offer, user2: remoteUser });
     } catch (error) {
       console.error("Error during negotiation:", error);
@@ -263,18 +255,17 @@ const Chat = () => {
   }, [pc, handleNegoNeeded]);
 
   // Handle sending messages
-  const handleMessages = () => {
+  const handleMessages = useCallback(() => {
     if (sendingMessage.trim() === "" || !remoteUser) return;
 
-    setMessages((prev) => ([...prev, { user: socket.id, message: sendingMessage, state: "sent" }]));
+    setMessages((prev) => [...prev, { user: socket.id, message: sendingMessage, state: "sent" }]);
     socket.emit("newMessage", { sendingMessage, remoteUser });
     setSendingMessage("");
-  };
+  }, [sendingMessage, remoteUser, socket]);
 
   useEffect(() => {
     const handleNewMessage = ({ sendingMessage, remoteUser }) => {
-      setMessages((prev) => ([...prev, { user: remoteUser, message: sendingMessage, state: "received" }]));
-      console.log(sendingMessage)
+      setMessages((prev) => [...prev, { user: remoteUser, message: sendingMessage, state: "received" }]);
     };
     socket.on("newMessage", handleNewMessage);
 
@@ -284,7 +275,7 @@ const Chat = () => {
   }, [socket]);
 
   // Handle ending the call
-  const handleEndCall = () => {
+  const handleEndCall = useCallback(() => {
     if (myStream) {
       myStream.getTracks().forEach((track) => track.stop());
     }
@@ -292,8 +283,8 @@ const Chat = () => {
       pc.close();
     }
 
-    socket.emit("end",({remoteUser}))
-    resetPeerConnection()
+    socket.emit("end", { remoteUser });
+    resetPeerConnection();
     setRemoteStream(null);
     setRemoteUser(null);
     setIsStarted(false);
@@ -313,19 +304,40 @@ const Chat = () => {
       }
     };
     accessCamera();
-
-  };
+  }, [myStream, pc, socket, remoteUser, resetPeerConnection]);
 
   // Handle finding a new user
-  const handleNext = () => {
-    // Logic to find a new user or reset the connection
-    setIsStarted(false);
-    setIsNewUser(false);
-    setRemoteStream(null);
-    setRemoteUser(null);
-    setIsNext(true)
-    socket.emit("next",{remoteUser});
-  };
+  // const handleNext = useCallback(() => {
+  //   if (myStream) {
+  //     myStream.getTracks().forEach((track) => track.stop());
+  //   }
+  //   if (pc) {
+  //     pc.close();
+  //   }
+
+  //   resetPeerConnection();
+  //   setRemoteStream(null);
+  //   setRemoteUser(null);
+  //   setIsStarted(true);
+  //   setIsNewUser(false);
+  //   setIsNext(false);
+  //   setMessages([]);
+
+  //   const accessCamera = async () => {
+  //     try {
+  //       const stream = await navigator.mediaDevices.getUserMedia({
+  //         audio: true,
+  //         video: true,
+  //       });
+  //       setMyStream(stream);
+  //     } catch (error) {
+  //       console.error("Error accessing camera: ", error);
+  //     }
+  //   };
+  //   accessCamera();
+  //   socket.emit("next", { remoteUser });
+  //   socket.emit("start");
+  // }, [myStream, pc, socket, remoteUser, resetPeerConnection]);
 
   return (
     <div className="h-screen w-full flex items-center justify-center">
@@ -338,7 +350,7 @@ const Chat = () => {
             title={
               isStarted && !remoteStream
                 ? "Searching for user"
-                : isNewUser 
+                : isNewUser
                 ? "New User Joined"
                 : isNext
                 ? "Searching for Next User"
@@ -349,7 +361,8 @@ const Chat = () => {
 
         {/* Buttons */}
         <div className="flex gap-6">
-          <button
+          {
+            !isStarted && !remoteStream && <button
             onClick={handleStart}
             className="flex items-center justify-center text-lg gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg shadow-md transition"
             aria-label="Start Chat"
@@ -357,24 +370,27 @@ const Chat = () => {
             <FaHourglassStart />
             Start
           </button>
+          }
 
-          <button
-            onClick={handleEndCall}
-            className="flex items-center justify-center text-lg gap-2 bg-red-500 hover:bg-red-700 text-white px-6 py-3 rounded-lg shadow-md transition"
-            aria-label="End Call"
-          >
-            <MdCallEnd />
-            End
-          </button>
+         {
+          remoteStream || isStarted ?  <button
+          onClick={handleEndCall}
+          className="flex items-center justify-center text-lg gap-2 bg-red-500 hover:bg-red-700 text-white px-6 py-3 rounded-lg shadow-md transition"
+          aria-label="End Call"
+        >
+          <MdCallEnd />
+          End
+        </button>:""
+         }
 
-          <button
+          {/* <button
             onClick={handleNext}
             className="flex items-center justify-center text-lg gap-2 bg-green-500 hover:bg-green-700 text-white px-6 py-3 rounded-lg shadow-md transition"
             aria-label="Next User"
           >
             <GrNext />
             Next
-          </button>
+          </button> */}
         </div>
       </div>
 
