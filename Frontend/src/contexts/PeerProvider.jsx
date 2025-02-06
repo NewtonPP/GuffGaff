@@ -1,43 +1,56 @@
-import React from 'react'
-import { useMemo } from 'react';
-import { createContext } from 'react'
+import React, { useMemo, useState } from 'react';
+import { createContext } from 'react';
 
 export const peerContext = createContext();
 
-const PeerProvider = ({children}) => {
+const PeerProvider = ({ children }) => {
+  const [pc, setPc] = useState(
+    new RTCPeerConnection({
+      iceServers: [
+        {
+          urls: [
+            "stun:stun.l.google.com:19302",
+            "stun:global.stun.twilio.com:3478",
+          ],
+        },
+      ],
+    })
+  );
 
-    const pc = useMemo(() => 
-        new RTCPeerConnection({
-            iceServers: [
-              {
-                urls: [
-                  "stun:stun.l.google.com:19302",
-                  "stun:global.stun.twilio.com:3478",
-                ],
-              },
-            ],
-          })
-    ,[])
+  const CreateOffer = async () => {
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    return offer;
+  };
 
-    const CreateOffer = async () => {
-    const offer = await pc.createOffer()
-    pc.setLocalDescription(offer)
-    return offer
-    }
+  const CreateAnswer = async (offer) => {
+    await pc.setRemoteDescription(offer);
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    return answer;
+  };
 
-    const CreateAnswer = async (offer) =>{
-        await pc.setRemoteDescription(offer)
-        const answer = await pc.createAnswer()
-       await pc.setLocalDescription(answer)
-        return answer
-    }
-
+  const resetPeerConnection = () => {
+    pc.close(); // Close the existing PeerConnection
+    const newPc = new RTCPeerConnection({
+      iceServers: [
+        {
+          urls: [
+            "stun:stun.l.google.com:19302",
+            "stun:global.stun.twilio.com:3478",
+          ],
+        },
+      ],
+    });
+    setPc(newPc); // Replace the old PeerConnection with a new one
+    return newPc;
+  };
 
   return (
-  <peerContext.Provider value={{pc, CreateAnswer, CreateOffer}}>
-    {children}
-  </peerContext.Provider>
-  )
-}
+    <peerContext.Provider value={{ pc, CreateAnswer, CreateOffer, resetPeerConnection }}>
+      {children}
+    </peerContext.Provider>
+  );
+};
 
-export default PeerProvider
+export default PeerProvider;

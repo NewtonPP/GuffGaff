@@ -52,7 +52,7 @@ const InputBox = ({ sendingMessage, setSendingMessage, handleMessages }) => (
 
 const Chat = () => {
   const { socket } = useContext(socketContext);
-  const { pc, CreateAnswer, CreateOffer } = useContext(peerContext);
+  const { pc, CreateAnswer, CreateOffer, resetPeerConnection} = useContext(peerContext);
 
   const [myStream, setMyStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
@@ -195,12 +195,33 @@ const Chat = () => {
 
     };
 
+    const handleEnd = () => {
+    setRemoteStream(null);
+    setRemoteUser(null);
+    setIsStarted(true);
+    setIsNewUser(false);
+    setIsNext(false);
+    setMessages([]);
+    }
+
+    const HandleNext = () =>{
+      setRemoteStream(null);
+      setRemoteUser(null);
+      setIsStarted(true);
+      setIsNewUser(false);
+      setIsNext(false);
+      setMessages([]);
+      socket.emit("start")
+    }
+
     socket.on("createOffer", handleCreateOffer);
     socket.on("offer", handleOffer);
     socket.on("answer", handleAnswer);
     socket.on("negoNeeded", handleNegoNeeded);
     socket.on("negoFinal", handleNegoDone);
     socket.on("disconnected", handleDisconnect);
+    socket.on("end", handleEnd)
+    socket.on("next",HandleNext)
 
     return () => {
       socket.off("createOffer", handleCreateOffer);
@@ -209,6 +230,7 @@ const Chat = () => {
       socket.off("negoNeeded", handleNegoNeeded);
       socket.off("negoDone", handleNegoDone);
       socket.off("disconnected", handleDisconnect);
+      socket.off("next",HandleNext);
     };
   }, [socket, pc, CreateOffer, CreateAnswer]);
 
@@ -244,16 +266,16 @@ const Chat = () => {
   const handleMessages = () => {
     if (sendingMessage.trim() === "" || !remoteUser) return;
 
-    setMessages((prev) => [...prev, { user: socket.id, message: sendingMessage, state: "sent" }]);
+    setMessages((prev) => ([...prev, { user: socket.id, message: sendingMessage, state: "sent" }]));
     socket.emit("newMessage", { sendingMessage, remoteUser });
     setSendingMessage("");
   };
 
   useEffect(() => {
     const handleNewMessage = ({ sendingMessage, remoteUser }) => {
-      setMessages((prev) => [...prev, { user: remoteUser, message: sendingMessage, state: "received" }]);
+      setMessages((prev) => ([...prev, { user: remoteUser, message: sendingMessage, state: "received" }]));
+      console.log(sendingMessage)
     };
-
     socket.on("newMessage", handleNewMessage);
 
     return () => {
@@ -269,7 +291,28 @@ const Chat = () => {
     if (pc) {
       pc.close();
     }
-    socket.disconnect(true);
+
+    socket.emit("end",({remoteUser}))
+    resetPeerConnection()
+    setRemoteStream(null);
+    setRemoteUser(null);
+    setIsStarted(false);
+    setIsNewUser(false);
+    setIsNext(false);
+    setMessages([]);
+
+    const accessCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true,
+        });
+        setMyStream(stream);
+      } catch (error) {
+        console.error("Error accessing camera: ", error);
+      }
+    };
+    accessCamera();
 
   };
 
@@ -281,7 +324,7 @@ const Chat = () => {
     setRemoteStream(null);
     setRemoteUser(null);
     setIsNext(true)
-    socket.emit("next");
+    socket.emit("next",{remoteUser});
   };
 
   return (
