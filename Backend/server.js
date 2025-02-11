@@ -1,16 +1,20 @@
 import cors from "cors"
 import express from "express"
 import { Server } from "socket.io"
-
+import http from "http"
 
 const app = express()
-app.use(cors({origin:["https://guffandgaff.netlify.app/"
-]}))
+app.use(cors({origin:["https://guffandgaff.netlify.app/",
+],
+methods: ["GET", "POST"]},
+))
 
-const io = new Server({cors:{
+const io = new Server(server, {cors:{
    origin:"https://guffandgaff.netlify.app/",
    
 }})
+
+const server = http.createServer(app)
 
 app.listen(4000, () => {
     console.log("Server running on port 4000")
