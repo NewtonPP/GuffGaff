@@ -4,11 +4,12 @@ import { Server } from "socket.io"
 
 
 const app = express()
-app.use(cors())
+app.use(cors({origin:["https://guffandgaff.netlify.app/"
+]}))
 
 const io = new Server({cors:{
    origin:"https://guffandgaff.netlify.app/",
-   methods: ["GET", "POST"],
+   
 }})
 
 app.listen(4000, () => {
