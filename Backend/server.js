@@ -6,7 +6,10 @@ import { Server } from "socket.io"
 const app = express()
 app.use(cors())
 
-const io = new Server({origin: "https://guffandgaff.netlify.app/",cors:true})
+const io = new Server({cors:{
+   origin:"https://guffandgaff.netlify.app/",
+   methods: ["GET", "POST"],
+}})
 
 app.listen(4000, () => {
     console.log("Server running on port 4000")
