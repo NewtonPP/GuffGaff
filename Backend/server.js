@@ -8,13 +8,14 @@ app.use(cors({origin:["https://guffandgaff.netlify.app/",
 ],
 methods: ["GET", "POST"]},
 ))
+const server = http.createServer(app)
 
 const io = new Server(server, {cors:{
    origin:"https://guffandgaff.netlify.app/",
    
 }})
 
-const server = http.createServer(app)
+
 
 app.listen(4000, () => {
     console.log("Server running on port 4000")
