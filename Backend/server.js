@@ -6,7 +6,7 @@ import http from "http"
 const app = express()
 
 app.use(cors({
-    origin: "https://guffandgaff.netlify.app",
+    origin: "https://guffandgaff.netlify.app/",
     methods: ["GET", "POST"]
   }));
 const server = http.createServer(app)
