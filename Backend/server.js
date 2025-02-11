@@ -4,24 +4,23 @@ import { Server } from "socket.io"
 import http from "http"
 
 const app = express()
-app.use(cors({origin:["https://guffandgaff.netlify.app/",
-],
-methods: ["GET", "POST"]},
-))
+
+app.use(cors({
+    origin: "https://guffandgaff.netlify.app",
+    methods: ["GET", "POST"]
+  }));
 const server = http.createServer(app)
 
 const io = new Server(server, {cors:{
    origin:"https://guffandgaff.netlify.app/",
-   
+   methods: ["GET", "POST"],
 }})
 
 
 
-app.listen(4000, () => {
+server.listen(4000, () => {
     console.log("Server running on port 4000")
 })
-
-io.listen(4001)
 
 let queue = []
 let users = []
