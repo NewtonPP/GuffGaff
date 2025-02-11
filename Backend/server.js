@@ -110,6 +110,68 @@ io.on("connection", (socket) =>{
         
         ToSend?.emit("end")
     })
+
+    // socket.on("next", ({ remoteUser }) => {
+    //     // Remove the current user from the queue
+    //     if (queue.includes(socket.id)) {
+    //         queue = queue.filter(q => q !== socket.id);
+    //     }
+    
+    //     // Find the remote user and their room
+    //     const ToSend = users.find(x => x.id === remoteUser);
+    //     const ROOM = Rooms.find(x => x.user1.id === remoteUser || x.user2.id === remoteUser);
+    
+    //     // Handle case where room is not found
+    //     if (!ROOM) {
+    //         console.error("Room not found for remoteUser:", remoteUser);
+    //         socket.emit("error", { message: "Room not found" });
+    //         return;
+    //     }
+    
+    //     // Add users from the room back to the queue
+    //     queue.push(ROOM.user1.id);
+    //     queue.push(ROOM.user2.id);
+    
+    //     // Remove the current user and remote user from the users array
+    //     users = users.filter(x => x.id !== socket.id && x.id !== remoteUser);
+    
+    //     // Add room users back to the users array if they don't already exist
+    //     if (!users.some(x => x.id === ROOM.user1.id)) {
+    //         users.push(ROOM.user1);
+    //     }
+    //     if (!users.some(x => x.id === ROOM.user2.id)) {
+    //         users.push(ROOM.user2);
+    //     }
+    
+    //     // If there are at least 2 users in the queue, create a new room
+    //     if (queue.length >= 2) {
+    //         const id1 = queue.shift();
+    //         const id2 = queue.shift();
+    
+    //         const user1 = users.find(x => x.id === id1);
+    //         const user2 = users.find(x => x.id === id2);
+    
+    //         // Handle case where users are not found
+    //         if (!user1 || !user2) {
+    //             console.error("Users not found in queue:", id1, id2);
+    //             return;
+    //         }
+    
+    //         // Generate a unique room ID
+    //         const ROOM_ID = `${id1}-${id2}`; // Or use a UUID library
+    
+    //         // Join the room and emit events
+    //         socket.join(ROOM_ID);
+    //         Rooms.push({ ROOM_ID, user1, user2 });
+    //         user1.emit("createOffer", { ROOM_ID, user2: user2.id });
+    //         ToSend?.emit("next");
+    //         user1.emit("NewUser");
+    //     }
+    
+    //     // Notify the remote user to proceed
+  
+    // });
+
     // socket.on("disconnect",()=>{
     //     // const ConnectedUsers = users.filter(x => x.id === socket.id)
     //     // users = ConnectedUsers

@@ -7,10 +7,10 @@ const Home = () => {
         navigate("/chat")
     }
   return (
-    <div className='h-screen w-full bg-yellow-600 flex items-center justify-center flex-col gap-4'>
+    <div className='h-screen w-full bg-[#63768d] flex items-center justify-center flex-col gap-4'>
       <h1 className='text-8xl font-bold'>Welcome to GuffGaff</h1>
       <h2 className='text-4xl font-semibold'>Sit, talk, and have fun</h2>
-      <button className='bg-orange-600 text-2xl font-semibold p-4 rounded-2xl cursor-pointer hover:bg-orange-700'
+      <button className='bg-[#8ac6d0] text-2xl font-semibold p-4 rounded-2xl cursor-pointer hover:bg-orange-700'
       onClick={HandleGetStarted}
       >
         Get Started
