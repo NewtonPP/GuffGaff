@@ -6,7 +6,7 @@ import { Server } from "socket.io"
 const app = express()
 app.use(cors())
 
-const io = new Server({cors:true})
+const io = new Server({origin: "https://guffgaff-4y84.onrender.com/",cors:true})
 
 app.listen(4000, () => {
     console.log("Server running on port 4000")

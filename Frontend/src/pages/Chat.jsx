@@ -340,70 +340,79 @@ const Chat = () => {
 
   return (
     <div className="h-screen w-full flex items-center justify-center bg-gray-800">
-      <div className="h-screen w-[90%] lg:w-[80%] xl:w-[70%] bg-gray-800 flex flex-col items-center justify-center gap-8 p-8 rounded-2xl shadow-xl">
-        {/* Video Containers */}
-        <div className="flex flex-wrap gap-8 items-center justify-center w-full">
-          <div className="h-[45%] sm:h-[40%] md:h-[45%] lg:h-[50%] w-full sm:w-[45%] lg:w-[48%] bg-white bg-opacity-20 backdrop-blur-md flex justify-center items-center rounded-lg shadow-lg">
-            <VideoPlayer stream={myStream} title="Camera Permission required to START the chat" />
-          </div>
-          <div className="h-[45%] sm:h-[40%] md:h-[45%] lg:h-[50%] w-full sm:w-[45%] lg:w-[48%] bg-white bg-opacity-20 backdrop-blur-md flex justify-center items-center rounded-lg shadow-lg">
-            <VideoPlayer
-              stream={remoteStream}
-              title={
-                isStarted && !remoteStream
-                  ? "Searching for user"
-                  : isNewUser
-                  ? "New User Joined"
-                  : isNext
-                  ? "Searching for Next User"
-                  : "Press Start to begin"
-              }
-            />
-          </div>
-        </div>
-  
-        {/* Buttons */}
-        <div className="flex gap-6 sm:gap-8 w-full justify-center">
-          {
-            !isStarted && !remoteStream && !isNewUser && (
-              <button
-                onClick={handleStart}
-                className="flex items-center justify-center text-lg gap-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white px-8 py-4 rounded-xl shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
-                aria-label="Start Chat"
-              >
-                <FaHourglassStart />
-                Start
-              </button>
-            )
-          }
-  
-          {
-            remoteStream || isStarted || isNewUser ? (
-              <button
-                onClick={handleEndCall}
-                className="flex items-center justify-center text-lg gap-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-500 text-white px-8 py-4 rounded-xl shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
-                aria-label="End Call"
-              >
-                <MdCallEnd />
-                End
-              </button>
-            ) : null
-          }
-        </div>
+  <div className="h-screen w-[90%] bg-gray-800 flex flex-col items-center justify-center gap-8 p-8 rounded-2xl shadow-xl">
+    {/* Video Containers */}
+    <div className="flex flex-wrap gap-8 items-center justify-center">
+      <div className="h-[50%] w-[48%] bg-white bg-opacity-20 backdrop-blur-md flex justify-center items-center rounded-lg shadow-lg">
+        <VideoPlayer stream={myStream} title="Camera Permission required to START the chat" />
       </div>
-  
-      {/* Chat Box */}
-      <div className="h-[60%] sm:h-[70%] lg:h-[85%] w-full sm:w-[40%] lg:w-[26%] bg-gray-700 rounded-2xl shadow-2xl flex flex-col justify-between">
-        <MessageList messages={messages} />
-        <InputBox
-          sendingMessage={sendingMessage}
-          setSendingMessage={setSendingMessage}
-          handleMessages={handleMessages}
+      <div className="h-[50%] w-[48%] bg-white bg-opacity-20 backdrop-blur-md flex justify-center items-center rounded-lg shadow-lg">
+        <VideoPlayer
+          stream={remoteStream}
+          title={
+            isStarted && !remoteStream
+              ? "Searching for user"
+              : isNewUser
+              ? "New User Joined"
+              : isNext
+              ? "Searching for Next User"
+              : "Press Start to begin"
+          }
         />
       </div>
     </div>
+
+    {/* Buttons */}
+    <div className="flex gap-8">
+      {
+        !isStarted && !remoteStream && !isNewUser  && (
+          <button
+            onClick={handleStart}
+            className="flex items-center justify-center text-lg gap-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white px-8 py-4 rounded-xl shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
+            aria-label="Start Chat"
+          >
+            <FaHourglassStart />
+            Start
+          </button>
+        )
+      }
+
+      {
+        remoteStream || isStarted || isNewUser ? (
+          <button
+            onClick={handleEndCall}
+            className="flex items-center justify-center text-lg gap-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-500 text-white px-8 py-4 rounded-xl shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
+            aria-label="End Call"
+          >
+            <MdCallEnd />
+            End
+          </button>
+        ) : null
+      }
+
+      {/* <button
+        onClick={handleNext}
+        className="flex items-center justify-center text-lg gap-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-500 text-white px-8 py-4 rounded-xl shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
+        aria-label="Next User"
+      >
+        <GrNext />
+        Next
+      </button> */}
+    </div>
+  </div>
+
+  {/* Chat Box */}
+  <div className="h-[85%] w-[26%] bg-gray-700 rounded-2xl shadow-2xl flex flex-col justify-between">
+    <MessageList messages={messages} />
+    <InputBox
+      sendingMessage={sendingMessage}
+      setSendingMessage={setSendingMessage}
+      handleMessages={handleMessages}
+    />
+  </div>
+</div>
+
   )
-  
 };
 
 export default Chat;
