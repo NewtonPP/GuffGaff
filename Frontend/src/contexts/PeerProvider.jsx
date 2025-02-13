@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import { createContext } from 'react';
+import { socketContext } from './SocketProvider';
 
 export const peerContext = createContext();
 
@@ -16,6 +17,8 @@ const PeerProvider = ({ children }) => {
       ],
     })
   );
+
+  const socket = useContext(socketContext)
 
   const CreateOffer = async () => {
     const offer = await pc.createOffer();
@@ -45,6 +48,7 @@ const PeerProvider = ({ children }) => {
     setPc(newPc); // Replace the old PeerConnection with a new one
     return newPc;
   };
+
 
   return (
     <peerContext.Provider value={{ pc, CreateAnswer, CreateOffer, resetPeerConnection }}>

@@ -207,6 +207,14 @@ const Chat = () => {
   
     // };
 
+
+    const HandleIceCandidate = ({candidate, type}) => {
+      console.log("AddedIce candidate from remote")
+      pc?.addIceCandidate(candidate)
+    }
+
+
+    socket.on("addIceCandidate", HandleIceCandidate)
     socket.on("createOffer", handleCreateOffer);
     socket.on("offer", handleOffer);
     socket.on("answer", handleAnswer);
@@ -338,6 +346,20 @@ const Chat = () => {
   //   socket.emit("next", { remoteUser });
   // }, [myStream, pc, socket, remoteUser, resetPeerConnection]);
 
+
+ 
+   pc.onicecandidate = async (e) => {
+     console.log("Receiving ice candidates")
+     if(e.candidate){
+       socket.emit("addIceCandidate", {
+         candidate: e.candidate,
+         type:"sender",
+         remoteUser
+       })
+       
+     }
+   }
+ 
   return (
     <div className="h-screen w-full flex items-center justify-center bg-gray-800">
   <div className="h-screen w-[90%] bg-gray-800 flex flex-col items-center justify-center gap-8 p-8 rounded-2xl shadow-xl">

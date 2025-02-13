@@ -6,13 +6,13 @@ import http from "http"
 const app = express()
 
 app.use(cors({
-    origin: "https://guffandgaff.netlify.app",
+    origin: ["https://guffandgaff.netlify.app", "http://localhost:5173"],
     methods: ["GET", "POST"]
   }));
 const server = http.createServer(app)
 
 const io = new Server(server, {cors:{
-   origin:"https://guffandgaff.netlify.app",
+   origin:["https://guffandgaff.netlify.app","http://localhost:5173"],
    methods: ["GET", "POST"],
 }})
 
@@ -82,6 +82,11 @@ io.on("connection", (socket) =>{
     socket.on("newMessage", ({sendingMessage, remoteUser}) => {
         const ToSend = users.find(x => x.id === remoteUser)
         ToSend?.emit("newMessage", {sendingMessage, remoteUser})
+    })
+
+    socket.on("addIceCandidate", ({candidate, type, remoteUser})=>{
+        const ToSend = users.find(x => x.id === remoteUser)
+        ToSend?.emit("addIceCandidate",({candidate, type}))
     })
 
     socket.on("end",({remoteUser})=>{
