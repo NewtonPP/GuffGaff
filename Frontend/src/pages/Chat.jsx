@@ -193,11 +193,12 @@ const Chat = () => {
       setMessages([]);
     };
 
-    const handleIceCandidate = ({ candidate }) => {
-      if (candidate) {
-        pc.addIceCandidate(candidate);
+    const handleIceCandidate = async ({ candidate }) => {
+      if (candidate && pc.remoteDescription) {
+        await pc.addIceCandidate(candidate);
       }
     };
+    
 
     socket.on("addIceCandidate", handleIceCandidate);
     socket.on("createOffer", handleCreateOffer);
@@ -266,38 +267,32 @@ const Chat = () => {
 
   // Handle ending the call
   const handleEndCall = useCallback(async () => {
-    // Clean up local stream
     if (myStream) {
-      myStream.getTracks().forEach((track) => track.stop()); // Stop all tracks
-      setMyStream(null); // Clear the local stream from state
+      myStream.getTracks().forEach((track) => track.stop());
     }
-  
-    // Clean up PeerConnection
     if (pc) {
-      pc.close(); // Close the PeerConnection
-      resetPeerConnection(); // Reset the PeerConnection (ensure this function clears all references)
+      pc.close();
     }
-  
-    // Notify the server that the call has ended
+
     socket.emit("end", { remoteUser });
-  
+    resetPeerConnection();
+
     // Reset all states
     setRemoteStream(null);
     setRemoteUser(null);
     setIsStarted(false);
     setIsNewUser(false);
     setMessages([]);
-  
+
     // Reinitialize local stream
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: true,
       });
-      setMyStream(stream); // Set the new stream in state
+      setMyStream(stream);
     } catch (error) {
       console.error("Error accessing camera: ", error);
-      alert("Failed to reinitialize camera and microphone. Please refresh the page.");
     }
   }, [myStream, pc, socket, remoteUser, resetPeerConnection]);
 

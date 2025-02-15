@@ -34,7 +34,12 @@ const PeerProvider = ({ children }) => {
   };
 
   const resetPeerConnection = () => {
-    pc.close(); // Close the existing PeerConnection
+    if (pc) {
+      pc.ontrack = null;
+      pc.onicecandidate = null;
+      pc.close();
+    }
+    
     const newPc = new RTCPeerConnection({
       iceServers: [
         {
@@ -45,10 +50,11 @@ const PeerProvider = ({ children }) => {
         },
       ],
     });
-    setPc(newPc); // Replace the old PeerConnection with a new one
+  
+    setPc(newPc);
     return newPc;
   };
-
+  
 
   return (
     <peerContext.Provider value={{ pc, CreateAnswer, CreateOffer, resetPeerConnection }}>
