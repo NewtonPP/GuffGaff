@@ -291,6 +291,7 @@ const Chat = () => {
         video: true,
       });
       setMyStream(stream);
+      console.log(myStream)
     } catch (error) {
       console.error("Error accessing camera: ", error);
     }
