@@ -6,7 +6,6 @@ import ReactPlayer from "react-player";
 import { FaHourglassStart } from "react-icons/fa";
 import { IoIosSend } from "react-icons/io";
 import { MdCallEnd } from "react-icons/md";
-import { GrNext } from "react-icons/gr";
 
 // Subcomponents for better modularity
 const VideoPlayer = ({ stream, title }) => (
@@ -64,7 +63,6 @@ const Chat = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [isNegotiating, setIsNegotiating] = useState(false);
-  const [isNext, setIsNext] = useState(false);
 
   // Access the user's camera and microphone
   useEffect(() => {
@@ -77,6 +75,7 @@ const Chat = () => {
         setMyStream(stream);
       } catch (error) {
         console.error("Error accessing camera: ", error);
+        alert("Failed to access camera and microphone. Please allow permissions.");
       }
     };
 
@@ -114,9 +113,7 @@ const Chat = () => {
   }, [pc]);
 
   // Function to start the connection
-
   const handleStart = useCallback(async () => {
-
     try {
       setIsStarted(true);
       socket.emit("start");
@@ -193,28 +190,16 @@ const Chat = () => {
       setRemoteUser(null);
       setIsStarted(true);
       setIsNewUser(false);
-      setIsNext(false);
       setMessages([]);
     };
 
-    // const handleNext = () => {
-    //   setRemoteStream(null);
-    //   setRemoteUser(null);
-    //   setIsStarted(true);
-    //   setIsNewUser(false);
-    //   setIsNext(false);
-    //   setMessages([]);
-  
-    // };
+    const handleIceCandidate = ({ candidate }) => {
+      if (candidate) {
+        pc.addIceCandidate(candidate);
+      }
+    };
 
-
-    const HandleIceCandidate = ({candidate, type}) => {
-      console.log("AddedIce candidate from remote")
-      pc?.addIceCandidate(candidate)
-    }
-
-
-    socket.on("addIceCandidate", HandleIceCandidate)
+    socket.on("addIceCandidate", handleIceCandidate);
     socket.on("createOffer", handleCreateOffer);
     socket.on("offer", handleOffer);
     socket.on("answer", handleAnswer);
@@ -222,9 +207,9 @@ const Chat = () => {
     socket.on("negoFinal", handleNegoDone);
     socket.on("disconnected", handleDisconnect);
     socket.on("end", handleEnd);
-    // socket.on("next", handleNext);
 
     return () => {
+      socket.off("addIceCandidate", handleIceCandidate);
       socket.off("createOffer", handleCreateOffer);
       socket.off("offer", handleOffer);
       socket.off("answer", handleAnswer);
@@ -232,15 +217,12 @@ const Chat = () => {
       socket.off("negoFinal", handleNegoDone);
       socket.off("disconnected", handleDisconnect);
       socket.off("end", handleEnd);
-      // socket.off("next", handleNext);
     };
   }, [socket, pc, CreateOffer, CreateAnswer]);
 
   // Handle negotiation needed
   const handleNegoNeeded = useCallback(async () => {
-    if (isNegotiating) {
-      return;
-    }
+    if (isNegotiating) return;
 
     setIsNegotiating(true);
 
@@ -283,7 +265,7 @@ const Chat = () => {
   }, [socket]);
 
   // Handle ending the call
-  const handleEndCall = useCallback(() => {
+  const handleEndCall = useCallback(async () => {
     if (myStream) {
       myStream.getTracks().forEach((track) => track.stop());
     }
@@ -293,148 +275,103 @@ const Chat = () => {
 
     socket.emit("end", { remoteUser });
     resetPeerConnection();
+
+    // Reset all states
     setRemoteStream(null);
     setRemoteUser(null);
     setIsStarted(false);
     setIsNewUser(false);
-    setIsNext(false);
     setMessages([]);
 
-    const accessCamera = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: true,
-        });
-        setMyStream(stream);
-      } catch (error) {
-        console.error("Error accessing camera: ", error);
-      }
-    };
-    accessCamera();
+    // Reinitialize local stream
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: true,
+      });
+      setMyStream(stream);
+    } catch (error) {
+      console.error("Error accessing camera: ", error);
+    }
   }, [myStream, pc, socket, remoteUser, resetPeerConnection]);
 
-  // Handle finding a new user
-  // const handleNext = useCallback(() => {
-  //   if (myStream) {
-  //     myStream.getTracks().forEach((track) => track.stop());
-  //   }
-  //   if (pc) {
-  //     pc.close();
-  //   }
+  // ICE Candidate Handling
+  useEffect(() => {
+    const handleIceCandidate = (e) => {
+      if (e.candidate) {
+        socket.emit("addIceCandidate", {
+          candidate: e.candidate,
+          remoteUser,
+        });
+      }
+    };
 
-  //   resetPeerConnection();
-  //   setRemoteStream(null);
-  //   setRemoteUser(null);
-  //   setIsStarted(true);
-  //   setIsNewUser(false);
-  //   setIsNext(false);
-  //   setMessages([]);
+    pc.onicecandidate = handleIceCandidate;
 
-  //   const accessCamera = async () => {
-  //     try {
-  //       const stream = await navigator.mediaDevices.getUserMedia({
-  //         audio: true,
-  //         video: true,
-  //       });
-  //       setMyStream(stream);
-  //     } catch (error) {
-  //       console.error("Error accessing camera: ", error);
-  //     }
-  //   };
-  //   accessCamera();
-  //   socket.emit("next", { remoteUser });
-  // }, [myStream, pc, socket, remoteUser, resetPeerConnection]);
+    return () => {
+      pc.onicecandidate = null;
+    };
+  }, [pc, socket, remoteUser]);
 
-
- 
-   pc.onicecandidate = async (e) => {
-     console.log("Receiving ice candidates")
-     if(e.candidate){
-       socket.emit("addIceCandidate", {
-         candidate: e.candidate,
-         type:"sender",
-         remoteUser
-       })
-       
-     }
-   }
- 
   return (
     <div className="h-screen w-full flex items-center justify-center bg-gray-800">
-  <div className="h-screen w-[90%] bg-gray-800 flex flex-col items-center justify-center gap-8 p-8 rounded-2xl shadow-xl">
-    {/* Video Containers */}
-    <div className="flex flex-wrap gap-8 items-center justify-center">
-      <div className="h-[50%] w-[48%] bg-white bg-opacity-20 backdrop-blur-md flex justify-center items-center rounded-lg shadow-lg">
-        <VideoPlayer stream={myStream} title="Camera Permission required to START the chat" />
+      <div className="h-screen w-[90%] bg-gray-800 flex flex-col items-center justify-center gap-8 p-8 rounded-2xl shadow-xl">
+        {/* Video Containers */}
+        <div className="flex flex-wrap gap-8 items-center justify-center">
+          <div className="h-[50%] w-[48%] bg-white bg-opacity-20 backdrop-blur-md flex justify-center items-center rounded-lg shadow-lg">
+            <VideoPlayer stream={myStream} title="Camera Permission required to START the chat" />
+          </div>
+          <div className="h-[50%] w-[48%] bg-white bg-opacity-20 backdrop-blur-md flex justify-center items-center rounded-lg shadow-lg">
+            <VideoPlayer
+              stream={remoteStream}
+              title={
+                isStarted && !remoteStream
+                  ? "Searching for user"
+                  : isNewUser
+                  ? "New User Joined"
+                  : "Press Start to begin"
+              }
+            />
+          </div>
+        </div>
+
+        {/* Buttons */}
+        <div className="flex gap-8">
+          {!isStarted && !remoteStream && !isNewUser && (
+            <button
+              onClick={handleStart}
+              className="flex items-center justify-center text-lg gap-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white px-8 py-4 rounded-xl shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
+              aria-label="Start Chat"
+            >
+              <FaHourglassStart />
+              Start
+            </button>
+          )}
+
+          {(remoteStream || isStarted || isNewUser) && (
+            <button
+              onClick={handleEndCall}
+              className="flex items-center justify-center text-lg gap-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-500 text-white px-8 py-4 rounded-xl shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
+              aria-label="End Call"
+            >
+              <MdCallEnd />
+              End
+            </button>
+          )}
+        </div>
       </div>
-      <div className="h-[50%] w-[48%] bg-white bg-opacity-20 backdrop-blur-md flex justify-center items-center rounded-lg shadow-lg">
-        <VideoPlayer
-          stream={remoteStream}
-          title={
-            isStarted && !remoteStream
-              ? "Searching for user"
-              : isNewUser
-              ? "New User Joined"
-              : isNext
-              ? "Searching for Next User"
-              : "Press Start to begin"
-          }
+
+      {/* Chat Box */}
+      <div className="h-[85%] w-[26%] bg-gray-700 rounded-2xl shadow-2xl flex flex-col justify-between">
+        <MessageList messages={messages} />
+        <InputBox
+          sendingMessage={sendingMessage}
+          setSendingMessage={setSendingMessage}
+          handleMessages={handleMessages}
         />
       </div>
     </div>
-
-    {/* Buttons */}
-    <div className="flex gap-8">
-      {
-        !isStarted && !remoteStream && !isNewUser  && (
-          <button
-            onClick={handleStart}
-            className="flex items-center justify-center text-lg gap-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white px-8 py-4 rounded-xl shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
-            aria-label="Start Chat"
-          >
-            <FaHourglassStart />
-            Start
-          </button>
-        )
-      }
-
-      {
-        remoteStream || isStarted || isNewUser ? (
-          <button
-            onClick={handleEndCall}
-            className="flex items-center justify-center text-lg gap-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-500 text-white px-8 py-4 rounded-xl shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
-            aria-label="End Call"
-          >
-            <MdCallEnd />
-            End
-          </button>
-        ) : null
-      }
-
-      {/* <button
-        onClick={handleNext}
-        className="flex items-center justify-center text-lg gap-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-500 text-white px-8 py-4 rounded-xl shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105"
-        aria-label="Next User"
-      >
-        <GrNext />
-        Next
-      </button> */}
-    </div>
-  </div>
-
-  {/* Chat Box */}
-  <div className="h-[85%] w-[26%] bg-gray-700 rounded-2xl shadow-2xl flex flex-col justify-between">
-    <MessageList messages={messages} />
-    <InputBox
-      sendingMessage={sendingMessage}
-      setSendingMessage={setSendingMessage}
-      handleMessages={handleMessages}
-    />
-  </div>
-</div>
-
-  )
+  );
 };
 
 export default Chat;
