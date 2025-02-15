@@ -267,9 +267,9 @@ const Chat = () => {
 
   // Handle ending the call
   const handleEndCall = useCallback(async () => {
-    if (myStream) {
-      myStream.getTracks().forEach((track) => track.stop());
-    }
+    // if (myStream) {
+    //   myStream.getTracks().forEach((track) => track.stop());
+    // }
     if (pc) {
       pc.close();
     }
@@ -285,16 +285,16 @@ const Chat = () => {
     setMessages([]);
 
     // Reinitialize local stream
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: true,
-      });
-      setMyStream(stream);
-      console.log(myStream)
-    } catch (error) {
-      console.error("Error accessing camera: ", error);
-    }
+    // try {
+    //   const stream = await navigator.mediaDevices.getUserMedia({
+    //     audio: true,
+    //     video: true,
+    //   });
+    //   setMyStream(stream);
+    //   console.log(myStream)
+    // } catch (error) {
+    //   console.error("Error accessing camera: ", error);
+    // }
   }, [myStream, pc, socket, remoteUser, resetPeerConnection]);
 
   // ICE Candidate Handling
