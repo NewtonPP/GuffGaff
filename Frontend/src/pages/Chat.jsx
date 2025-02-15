@@ -266,32 +266,38 @@ const Chat = () => {
 
   // Handle ending the call
   const handleEndCall = useCallback(async () => {
+    // Clean up local stream
     if (myStream) {
-      myStream.getTracks().forEach((track) => track.stop());
+      myStream.getTracks().forEach((track) => track.stop()); // Stop all tracks
+      setMyStream(null); // Clear the local stream from state
     }
+  
+    // Clean up PeerConnection
     if (pc) {
-      pc.close();
+      pc.close(); // Close the PeerConnection
+      resetPeerConnection(); // Reset the PeerConnection (ensure this function clears all references)
     }
-
+  
+    // Notify the server that the call has ended
     socket.emit("end", { remoteUser });
-    resetPeerConnection();
-
+  
     // Reset all states
     setRemoteStream(null);
     setRemoteUser(null);
     setIsStarted(false);
     setIsNewUser(false);
     setMessages([]);
-
+  
     // Reinitialize local stream
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: true,
       });
-      setMyStream(stream);
+      setMyStream(stream); // Set the new stream in state
     } catch (error) {
       console.error("Error accessing camera: ", error);
+      alert("Failed to reinitialize camera and microphone. Please refresh the page.");
     }
   }, [myStream, pc, socket, remoteUser, resetPeerConnection]);
 
