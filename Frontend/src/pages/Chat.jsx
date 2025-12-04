@@ -63,6 +63,7 @@ const Chat = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [isNewUser, setIsNewUser] = useState(false);
   const [isNegotiating, setIsNegotiating] = useState(false);
+  const [connectionState, setConnectionState] = useState('new'); // Track connection state
 
   // Access the user's camera and microphone
   useEffect(() => {
@@ -88,18 +89,61 @@ const Chat = () => {
     };
   }, []);
 
-  // Add local stream to PeerConnection
+  // Add local stream to PeerConnection when both are ready
   useEffect(() => {
-    if (myStream && pc) {
+    if (myStream && pc && pc.connectionState !== 'closed') {
+      // Clear existing tracks first
+      const senders = pc.getSenders();
+      senders.forEach(sender => {
+        if (sender.track) {
+          pc.removeTrack(sender);
+        }
+      });
+
+      // Add new tracks
       myStream.getTracks().forEach((track) => {
         pc.addTrack(track, myStream);
       });
     }
   }, [myStream, pc]);
 
+  // Monitor connection state
+  useEffect(() => {
+    if (pc) {
+      const handleConnectionStateChange = () => {
+        setConnectionState(pc.connectionState);
+        console.log('Connection state:', pc.connectionState);
+        
+        if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+          console.log('Connection failed/disconnected, resetting...');
+          handleConnectionReset();
+        }
+      };
+
+      pc.addEventListener('connectionstatechange', handleConnectionStateChange);
+
+      return () => {
+        pc.removeEventListener('connectionstatechange', handleConnectionStateChange);
+      };
+    }
+  }, [pc]);
+
+  // Handle connection reset
+  const handleConnectionReset = useCallback(() => {
+    setRemoteStream(null);
+    setRemoteUser(null);
+    setIsNewUser(false);
+    setIsNegotiating(false);
+    setMessages([]);
+    resetPeerConnection();
+  }, [resetPeerConnection]);
+
   // Handle remote stream
   useEffect(() => {
+    if (!pc) return;
+
     const handleTrackEvent = (ev) => {
+      console.log('Received remote track:', ev);
       if (ev.streams && ev.streams.length > 0) {
         setRemoteStream(ev.streams[0]);
       }
@@ -116,6 +160,7 @@ const Chat = () => {
   const handleStart = useCallback(async () => {
     try {
       setIsStarted(true);
+      setConnectionState('searching');
       socket.emit("start");
     } catch (error) {
       console.error("Error starting connection:", error);
@@ -125,34 +170,56 @@ const Chat = () => {
   // Handle socket events
   useEffect(() => {
     const handleCreateOffer = async ({ ROOM_ID, user2 }) => {
+      console.log('Creating offer for user:', user2);
       setRemoteUser(user2);
       setIsNewUser(true);
       setIsStarted(false);
 
       try {
+        // Ensure peer connection is fresh
+        if (pc.connectionState !== 'new' && pc.connectionState !== 'connecting') {
+          resetPeerConnection();
+          // Wait a bit for the reset to complete
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
         const offer = await CreateOffer();
         socket.emit("offer", { offer, user2 });
       } catch (error) {
         console.error("Error creating offer:", error);
+        handleConnectionReset();
       }
     };
 
     const handleOffer = async ({ offer, From }) => {
+      console.log('Received offer from:', From);
       setRemoteUser(From);
       setIsNewUser(true);
       setIsStarted(false);
 
       try {
+        // Ensure peer connection is fresh
+        if (pc.connectionState !== 'new') {
+          resetPeerConnection();
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
         const answer = await CreateAnswer(offer);
         socket.emit("answer", { answer, To: From });
       } catch (error) {
         console.error("Error handling offer:", error);
+        handleConnectionReset();
       }
     };
 
     const handleAnswer = async ({ answer }) => {
       try {
+        if (pc.remoteDescription) {
+          console.warn('Remote description already set, ignoring answer');
+          return;
+        }
         await pc.setRemoteDescription(answer);
+        console.log('Answer set successfully');
       } catch (error) {
         console.error("Error setting remote description:", error);
       }
@@ -166,7 +233,6 @@ const Chat = () => {
         }
 
         const answer = await CreateAnswer(offer);
-        await pc.setLocalDescription(answer);
         socket.emit("negoDone", { answer, To: From });
       } catch (error) {
         console.error("Error handling incoming negotiation:", error);
@@ -175,30 +241,36 @@ const Chat = () => {
 
     const handleNegoDone = async ({ answer }) => {
       try {
-        await pc.setRemoteDescription(answer);
+        if (pc.signalingState === 'have-local-offer') {
+          await pc.setRemoteDescription(answer);
+        }
       } catch (error) {
         console.error("Error finalizing negotiation:", error);
       }
     };
 
     const handleDisconnect = () => {
+      console.log('Other user disconnected');
       alert("Other User Disconnected");
+      handleConnectionReset();
+      setIsStarted(true); // Continue searching for new user
     };
 
     const handleEnd = () => {
-      setRemoteStream(null);
-      setRemoteUser(null);
-      setIsStarted(true);
-      setIsNewUser(false);
-      setMessages([]);
+      console.log('Call ended by other user');
+      handleConnectionReset();
+      setIsStarted(true); // Continue searching for new user (the other person ended, so we keep searching)
     };
 
     const handleIceCandidate = async ({ candidate }) => {
-      if (candidate && pc.remoteDescription) {
-        await pc.addIceCandidate(candidate);
+      try {
+        if (candidate && pc.remoteDescription && pc.connectionState !== 'closed') {
+          await pc.addIceCandidate(candidate);
+        }
+      } catch (error) {
+        console.error('Error adding ICE candidate:', error);
       }
     };
-    
 
     socket.on("addIceCandidate", handleIceCandidate);
     socket.on("createOffer", handleCreateOffer);
@@ -219,26 +291,27 @@ const Chat = () => {
       socket.off("disconnected", handleDisconnect);
       socket.off("end", handleEnd);
     };
-  }, [socket, pc, CreateOffer, CreateAnswer]);
+  }, [socket, pc, CreateOffer, CreateAnswer, resetPeerConnection, handleConnectionReset]);
 
   // Handle negotiation needed
   const handleNegoNeeded = useCallback(async () => {
-    if (isNegotiating) return;
+    if (isNegotiating || !remoteUser) return;
 
     setIsNegotiating(true);
 
     try {
       const offer = await CreateOffer();
-      await pc.setLocalDescription(offer);
       socket.emit("negoNeeded", { offer, user2: remoteUser });
     } catch (error) {
       console.error("Error during negotiation:", error);
     } finally {
       setIsNegotiating(false);
     }
-  }, [CreateOffer, remoteUser, socket, pc, isNegotiating]);
+  }, [CreateOffer, remoteUser, socket, isNegotiating]);
 
   useEffect(() => {
+    if (!pc) return;
+    
     pc.addEventListener("negotiationneeded", handleNegoNeeded);
     return () => {
       pc.removeEventListener("negotiationneeded", handleNegoNeeded);
@@ -267,40 +340,21 @@ const Chat = () => {
 
   // Handle ending the call
   const handleEndCall = useCallback(async () => {
-    // if (myStream) {
-    //   myStream.getTracks().forEach((track) => track.stop());
-    // }
-    if (pc) {
-      pc.close();
+    if (remoteUser) {
+      socket.emit("end", { remoteUser });
     }
-
-    socket.emit("end", { remoteUser });
-    resetPeerConnection();
-
-    // Reset all states
-    setRemoteStream(null);
-    setRemoteUser(null);
+    
+    // Reset connection
+    handleConnectionReset();
     setIsStarted(false);
-    setIsNewUser(false);
-    setMessages([]);
-
-    // Reinitialize local stream
-    // try {
-    //   const stream = await navigator.mediaDevices.getUserMedia({
-    //     audio: true,
-    //     video: true,
-    //   });
-    //   setMyStream(stream);
-    //   console.log(myStream)
-    // } catch (error) {
-    //   console.error("Error accessing camera: ", error);
-    // }
-  }, [myStream, pc, socket, remoteUser, resetPeerConnection]);
+  }, [socket, remoteUser, handleConnectionReset]);
 
   // ICE Candidate Handling
   useEffect(() => {
+    if (!pc) return;
+
     const handleIceCandidate = (e) => {
-      if (e.candidate) {
+      if (e.candidate && remoteUser) {
         socket.emit("addIceCandidate", {
           candidate: e.candidate,
           remoteUser,
@@ -328,13 +382,20 @@ const Chat = () => {
               stream={remoteStream}
               title={
                 isStarted && !remoteStream
-                  ? "Searching for user"
-                  : isNewUser
-                  ? "New User Joined"
+                  ? "Searching for user..."
+                  : isNewUser && !remoteStream
+                  ? "Connecting to user..."
+                  : isNewUser && remoteStream
+                  ? "Connected!"
                   : "Press Start to begin"
               }
             />
           </div>
+        </div>
+
+        {/* Connection Status Debug Info - Remove in production */}
+        <div className="text-white text-sm">
+          Connection State: {connectionState} | Started: {isStarted.toString()} | New User: {isNewUser.toString()}
         </div>
 
         {/* Buttons */}
