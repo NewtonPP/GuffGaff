@@ -1,1 +1,6 @@
 node_modules
+
+# Personal overrides only — .env.development / .env.production are committed.
+.env
+.env.local
+.env.*.local

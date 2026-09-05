@@ -1,21 +1,23 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "GuffGaff signalling server",
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js"
+    "dev": "NODE_ENV=development nodemon server.js",
+    "start": "NODE_ENV=production node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
     "express": "^4.21.2",
-    "nodemon": "^3.1.9",
-    "socket.io": "^4.8.1",
-    "uuidv4": "^6.2.13"
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
   }
 }
