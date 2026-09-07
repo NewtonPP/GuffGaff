@@ -1,6 +1,8 @@
 node_modules
 
-# Personal overrides only — .env.development / .env.production are committed.
+# Local env files — never commit. Copy .env.example to create them.
 .env
 .env.local
+.env.development
+.env.production
 .env.*.local
