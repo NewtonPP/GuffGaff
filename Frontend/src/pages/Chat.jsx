@@ -20,10 +20,10 @@ import { usePeer } from "../contexts/peerContext";
 import Logo from "../components/Logo";
 
 const STATUS = {
-  idle: { label: "Not connected", tone: "text-cream-400", dot: "bg-cream-500" },
-  searching: { label: "Looking for someone", tone: "text-clay-300", dot: "bg-clay-400" },
-  connecting: { label: "Connecting", tone: "text-ochre-300", dot: "bg-ochre-400" },
-  connected: { label: "Connected", tone: "text-sage-400", dot: "bg-sage-400" },
+  idle: { label: "Not connected", tone: "text-graphite-500", dot: "bg-graphite-400" },
+  searching: { label: "Looking for someone", tone: "text-taupe-500", dot: "bg-taupe-500" },
+  connecting: { label: "Connecting", tone: "text-sage-600", dot: "bg-sage-400" },
+  connected: { label: "Connected", tone: "text-sage-700", dot: "bg-sage-500" },
 };
 
 /* ------------------------------------------------------------------ *
@@ -63,12 +63,12 @@ const StatusPill = ({ status }) => {
   const animated = status === "searching" || status === "connecting";
 
   return (
-    <span className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] py-1.5 pl-3 pr-4 text-[0.8rem] backdrop-blur-sm">
+    <span className="inline-flex items-center gap-2.5 rounded-full border border-sand-300 bg-sand-50 py-1.5 pl-3 pr-4 text-[0.8rem] shadow-[0_1px_2px_rgba(30,32,28,0.04)]">
       <span className="relative grid h-2 w-2 place-items-center">
         {animated && <span className={`absolute h-2 w-2 animate-pulse-ring rounded-full ${dot}`} />}
         <span className={`h-2 w-2 rounded-full ${dot}`} />
       </span>
-      <span className={tone}>{label}</span>
+      <span className={`font-semibold ${tone}`}>{label}</span>
     </span>
   );
 };
@@ -87,24 +87,24 @@ const StageOverlay = ({ status, mediaError, onStart, canStart }) => {
               <span
                 key={delay}
                 className={`absolute h-16 w-16 animate-pulse-ring rounded-full border ${
-                  searching ? "border-clay-400/70" : "border-rust-400/70"
+                  searching ? "border-taupe-300/70" : "border-sage-300/70"
                 }`}
                 style={{ animationDelay: `${delay}s` }}
               />
             ))}
             <span
-              className={`relative grid h-16 w-16 place-items-center rounded-full bg-bark-800 ring-1 ring-white/10 ${
-                searching ? "text-clay-300" : "text-ochre-300"
+              className={`relative grid h-16 w-16 place-items-center rounded-full bg-graphite-900 ring-1 ring-sand-50/15 ${
+                searching ? "text-taupe-300" : "text-sage-300"
               }`}
             >
               <LuRadio className="text-xl" />
             </span>
           </div>
 
-          <p className="mt-7 font-display text-xl font-semibold text-cream-100">
+          <p className="mt-7 font-display text-xl font-extrabold tracking-[-0.02em] text-sand-50">
             {searching ? "Looking for someone…" : "Connecting…"}
           </p>
-          <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-cream-400">
+          <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-sand-300">
             {searching
               ? "You're in the queue. The moment somebody else presses start, you'll both land here."
               : "Shaking hands with your partner's browser. This usually takes a second or two."}
@@ -117,10 +117,10 @@ const StageOverlay = ({ status, mediaError, onStart, canStart }) => {
   return (
     <div className="absolute inset-0 grid place-items-center px-6 text-center">
       <div>
-        <h2 className="font-display text-[clamp(1.5rem,3vw,2rem)] font-bold text-cream-50">
+        <h2 className="font-display text-[clamp(1.5rem,3vw,2rem)] font-extrabold text-sand-50">
           Ready when you are
         </h2>
-        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-cream-400">
+        <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-sand-300">
           {mediaError ??
             "Press start and we'll pair you with the next person in the queue."}
         </p>
@@ -136,10 +136,11 @@ const StageOverlay = ({ status, mediaError, onStart, canStart }) => {
 const ControlButton = ({ icon: Icon, label, onClick, active = true, tone = "neutral", disabled }) => {
   const tones = {
     neutral: active
-      ? "bg-white/[0.07] text-cream-100 hover:bg-white/[0.12]"
-      : "bg-rust-500/90 text-white hover:bg-rust-500",
-    danger: "bg-rust-500 text-white hover:bg-rust-400 shadow-lg shadow-rust-500/25",
-    accent: "bg-white/[0.07] text-cream-100 hover:bg-clay-500 hover:text-white",
+      ? "border-sand-300 bg-sand-200 text-graphite-800 hover:bg-sand-300"
+      : "border-rose-600/30 bg-rose-500 text-sand-50 hover:bg-rose-400",
+    danger:
+      "border-rose-600/30 bg-rose-500 text-sand-50 hover:bg-rose-400 shadow-lg shadow-rose-500/25",
+    accent: "border-sand-300 bg-sand-200 text-graphite-800 hover:bg-sage-600 hover:text-sand-50",
   };
 
   return (
@@ -149,7 +150,7 @@ const ControlButton = ({ icon: Icon, label, onClick, active = true, tone = "neut
       title={label}
       aria-label={label}
       aria-pressed={tone === "neutral" ? active : undefined}
-      className={`grid h-12 w-12 place-items-center rounded-full border border-white/10 text-lg transition-all duration-200 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-40 ${tones[tone]}`}
+      className={`grid h-12 w-12 place-items-center rounded-full border text-lg transition-all duration-200 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-40 ${tones[tone]}`}
     >
       <Icon />
     </button>
@@ -168,8 +169,8 @@ const MessageList = ({ messages, status }) => {
       {messages.length === 0 && (
         <div className="grid h-full place-items-center px-4 text-center">
           <div>
-            <LuMessageSquare className="mx-auto text-2xl text-cream-500" />
-            <p className="mt-3 text-sm text-cream-400">
+            <LuMessageSquare className="mx-auto text-2xl text-sand-400" />
+            <p className="mt-3 text-sm text-graphite-400">
               {status === "connected"
                 ? "Say hello — messages here disappear when the call ends."
                 : "Messages will show up once you're paired."}
@@ -184,10 +185,10 @@ const MessageList = ({ messages, status }) => {
           className={`flex ${message.mine ? "justify-end" : "justify-start"}`}
         >
           <span
-            className={`max-w-[85%] break-words rounded-2xl px-3.5 py-2 text-[0.9rem] leading-snug ${
+            className={`max-w-[85%] break-words rounded-2xl px-3.5 py-2 text-[0.9rem] font-medium leading-snug ${
               message.mine
-                ? "rounded-br-md bg-clay-500 text-cream-50"
-                : "rounded-bl-md border border-white/[0.07] bg-white/[0.05] text-cream-200"
+                ? "rounded-br-md bg-sage-600 text-sand-50"
+                : "rounded-bl-md border border-sand-300 bg-sand-200 text-graphite-700"
             }`}
           >
             {message.text}
@@ -200,10 +201,10 @@ const MessageList = ({ messages, status }) => {
 };
 
 const Composer = ({ draft, setDraft, onSend, disabled }) => (
-  <div className="border-t border-white/[0.07] p-3">
-    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-bark-900/80 py-1.5 pl-4 pr-1.5 transition-colors focus-within:border-clay-400/50">
+  <div className="border-t border-sand-200 p-3">
+    <div className="flex items-center gap-2 rounded-full border border-sand-300 bg-sand-100 py-1.5 pl-4 pr-1.5 transition-colors focus-within:border-sage-400 focus-within:bg-sand-50">
       <input
-        className="min-w-0 flex-1 bg-transparent py-1.5 text-[0.92rem] text-cream-100 outline-none placeholder:text-cream-500 disabled:cursor-not-allowed"
+        className="min-w-0 flex-1 bg-transparent py-1.5 text-[0.92rem] font-medium text-graphite-800 outline-none placeholder:font-normal placeholder:text-graphite-400 disabled:cursor-not-allowed"
         placeholder={disabled ? "Connect to start chatting" : "Type a message…"}
         value={draft}
         disabled={disabled}
@@ -217,7 +218,7 @@ const Composer = ({ draft, setDraft, onSend, disabled }) => (
         onClick={onSend}
         disabled={disabled || !draft.trim()}
         aria-label="Send message"
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-clay-500 text-cream-50 transition-colors hover:bg-clay-400 disabled:pointer-events-none disabled:opacity-35"
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sage-600 text-sand-50 transition-colors hover:bg-sage-500 disabled:pointer-events-none disabled:opacity-35"
       >
         <LuSend className="text-[0.95rem]" />
       </button>
@@ -588,9 +589,9 @@ const Chat = () => {
   const isConnected = status === "connected";
 
   return (
-    <div className="grain relative flex h-[100dvh] flex-col overflow-hidden bg-bark-950">
+    <div className="grain relative flex h-[100dvh] flex-col overflow-hidden bg-sand-100">
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="warmth -top-56 left-[6%] h-[30rem] w-[38rem] bg-clay-600/18" />
+        <div className="wash -top-56 left-[6%] h-[30rem] w-[38rem] bg-sage-300/45" />
       </div>
 
       {/* ---- top bar ---- */}
@@ -599,16 +600,18 @@ const Chat = () => {
           <Link
             to="/"
             aria-label="Back to home"
-            className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/[0.04] text-cream-300 transition-colors hover:text-cream-50"
+            className="grid h-9 w-9 place-items-center rounded-full border border-sand-300 bg-sand-50 text-graphite-600 transition-colors hover:border-sage-400 hover:text-sage-700"
           >
             <LuArrowLeft />
           </Link>
-          <Logo className="hidden sm:inline-flex" />
+          <span className="hidden sm:contents">
+            <Logo />
+          </span>
         </div>
 
         <div className="flex items-center gap-2.5">
           {partnerId && isConnected && (
-            <span className="hidden rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 font-mono text-[0.72rem] text-cream-400 sm:inline">
+            <span className="hidden rounded-full border border-sand-300 bg-sand-50 px-3 py-1.5 font-mono text-[0.72rem] text-graphite-500 sm:inline">
               {partnerId.slice(0, 8)}
             </span>
           )}
@@ -621,11 +624,11 @@ const Chat = () => {
         {/* stage */}
         <section className="relative min-h-0">
           <div
-            className={`card relative h-full overflow-hidden ${
-              isConnected ? "border-sage-500/35" : ""
+            className={`card relative h-full overflow-hidden p-0 ${
+              isConnected ? "border-sage-400" : ""
             }`}
           >
-            <div className="absolute inset-0 bg-bark-950">
+            <div className="absolute inset-0 bg-graphite-950">
               <VideoSurface stream={remoteStream} muted={false} />
               <StageOverlay
                 status={status}
@@ -636,26 +639,26 @@ const Chat = () => {
             </div>
 
             {/* self view */}
-            <div className="absolute bottom-24 left-4 z-20 h-24 w-32 overflow-hidden rounded-xl border border-white/15 bg-bark-850 shadow-2xl sm:bottom-28 sm:left-6 sm:h-32 sm:w-44">
+            <div className="absolute bottom-24 left-4 z-20 h-24 w-32 overflow-hidden rounded-xl border border-sand-50/20 bg-graphite-900 shadow-2xl sm:bottom-28 sm:left-6 sm:h-32 sm:w-44">
               <VideoSurface stream={myStream} muted mirrored />
               {(!myStream || !camOn) && (
-                <div className="absolute inset-0 grid place-items-center text-cream-500">
+                <div className="absolute inset-0 grid place-items-center text-sand-400">
                   <LuVideoOff />
                 </div>
               )}
-              <span className="absolute bottom-1.5 left-2 text-[0.65rem] font-medium uppercase tracking-wider text-cream-300/90">
+              <span className="absolute bottom-1.5 left-2 font-display text-[0.65rem] font-bold uppercase tracking-[0.12em] text-sand-200">
                 You
               </span>
               {!micOn && (
-                <span className="absolute bottom-1.5 right-2 grid h-5 w-5 place-items-center rounded-full bg-rust-500 text-[0.6rem] text-white">
+                <span className="absolute bottom-1.5 right-2 grid h-5 w-5 place-items-center rounded-full bg-rose-500 text-[0.6rem] text-sand-50">
                   <LuMicOff />
                 </span>
               )}
             </div>
 
             {/* control dock */}
-            <div className="absolute inset-x-0 bottom-0 z-20 flex justify-center bg-gradient-to-t from-bark-950/95 via-bark-950/70 to-transparent px-4 pb-5 pt-14">
-              <div className="flex items-center gap-2.5 rounded-full border border-white/10 bg-bark-900/85 p-2 backdrop-blur-xl">
+            <div className="absolute inset-x-0 bottom-0 z-20 flex justify-center bg-gradient-to-t from-graphite-950/90 via-graphite-950/55 to-transparent px-4 pb-5 pt-14">
+              <div className="flex items-center gap-2.5 rounded-full border border-sand-300 bg-sand-50/92 p-2 shadow-[0_18px_40px_-18px_rgba(0,0,0,0.6)] backdrop-blur-xl">
                 <ControlButton
                   icon={micOn ? LuMic : LuMicOff}
                   label={micOn ? "Mute microphone" : "Unmute microphone"}
@@ -671,13 +674,13 @@ const Chat = () => {
                   disabled={!myStream}
                 />
 
-                <span className="mx-0.5 h-8 w-px bg-white/10" />
+                <span className="mx-0.5 h-8 w-px bg-sand-300" />
 
                 {isIdle ? (
                   <button
                     onClick={handleStart}
                     disabled={!myStream}
-                    className="btn-primary h-12 px-6 py-0 text-[0.92rem]"
+                    className="btn-primary h-12 rounded-full px-6 py-0 text-[0.92rem]"
                   >
                     <LuPlay />
                     Start
@@ -688,7 +691,7 @@ const Chat = () => {
                       onClick={handleSkip}
                       disabled={!isConnected}
                       title="Next person"
-                      className="inline-flex h-12 items-center gap-2 rounded-full border border-white/10 bg-white/[0.07] px-5 text-[0.92rem] font-semibold text-cream-100 transition-all hover:-translate-y-0.5 hover:bg-white/[0.12] disabled:pointer-events-none disabled:opacity-40"
+                      className="inline-flex h-12 items-center gap-2 rounded-full border border-sand-300 bg-sand-200 px-5 font-display text-[0.92rem] font-bold text-graphite-800 transition-all hover:-translate-y-0.5 hover:bg-sand-300 disabled:pointer-events-none disabled:opacity-40"
                     >
                       <LuSkipForward />
                       Next
@@ -702,16 +705,16 @@ const Chat = () => {
                   </>
                 )}
 
-                <span className="mx-0.5 h-8 w-px bg-white/10 lg:hidden" />
+                <span className="mx-0.5 h-8 w-px bg-sand-300 lg:hidden" />
 
                 <button
                   onClick={() => openChat(true)}
                   aria-label="Open chat"
-                  className="relative grid h-12 w-12 place-items-center rounded-full border border-white/10 bg-white/[0.07] text-lg text-cream-100 transition-all hover:-translate-y-0.5 hover:bg-white/[0.12] lg:hidden"
+                  className="relative grid h-12 w-12 place-items-center rounded-full border border-sand-300 bg-sand-200 text-lg text-graphite-800 transition-all hover:-translate-y-0.5 hover:bg-sand-300 lg:hidden"
                 >
                   <LuMessageSquare />
                   {unread > 0 && (
-                    <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-rust-500 px-1 text-[0.65rem] font-bold text-white">
+                    <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-rose-500 px-1 text-[0.65rem] font-bold text-sand-50">
                       {unread}
                     </span>
                   )}
@@ -729,17 +732,17 @@ const Chat = () => {
               : "max-lg:pointer-events-none max-lg:translate-y-6 max-lg:opacity-0"
           }`}
         >
-          <div className="flex shrink-0 items-center justify-between border-b border-white/[0.07] px-4 py-3">
+          <div className="flex shrink-0 items-center justify-between border-b border-sand-200 px-4 py-3">
             <div>
-              <h2 className="font-display text-[0.95rem] font-semibold text-cream-50">Chat</h2>
-              <p className="text-[0.72rem] text-cream-500">
+              <h2 className="font-display text-[0.95rem] font-extrabold">Chat</h2>
+              <p className="text-[0.72rem] font-medium text-graphite-400">
                 {isConnected ? "Cleared when the call ends" : "Not connected"}
               </p>
             </div>
             <button
               onClick={() => openChat(false)}
               aria-label="Close chat"
-              className="grid h-8 w-8 place-items-center rounded-full text-cream-400 transition-colors hover:bg-white/[0.06] hover:text-cream-100 lg:hidden"
+              className="grid h-8 w-8 place-items-center rounded-full text-graphite-500 transition-colors hover:bg-sand-200 hover:text-graphite-900 lg:hidden"
             >
               <LuX />
             </button>

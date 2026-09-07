@@ -1,42 +1,52 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------ *
- * Tokens — one warm family, not a rainbow.
- * Bark (near-black with a brown undertone), cream, and a single clay
- * accent. Ochre and sage appear sparingly and only where they mean
- * something: a highlight, a live indicator.
+ * Tokens — paper, stone and sage.
+ * The page is beige. Type is a warm near-black. One green carries every
+ * accent, and a muted rose appears only where something must read as
+ * "stop". No orange, no blue, anywhere.
  * ------------------------------------------------------------------ */
 @theme {
-  --color-bark-950: #120d0a;
-  --color-bark-900: #191310;
-  --color-bark-850: #201814;
-  --color-bark-800: #291f1a;
-  --color-bark-700: #362a23;
-  --color-bark-600: #46362d;
+  /* Paper — the ground everything sits on */
+  --color-sand-50: #fdfbf7;
+  --color-sand-100: #f5f1e8;
+  --color-sand-200: #ece5d8;
+  --color-sand-300: #ddd5c4;
+  --color-sand-400: #c6bda8;
 
-  --color-cream-50: #fbf6ef;
-  --color-cream-100: #f3eadd;
-  --color-cream-200: #dfd1bf;
-  --color-cream-300: #b9a794;
-  --color-cream-400: #8e7d6c;
-  --color-cream-500: #6b5d50;
+  /* Graphite — warm grey, from body copy down to the video bed */
+  --color-graphite-300: #94928a;
+  --color-graphite-400: #6e6d64;
+  --color-graphite-500: #605f59;
+  --color-graphite-600: #4d4e49;
+  --color-graphite-700: #3f413b;
+  --color-graphite-800: #2c2e29;
+  --color-graphite-900: #1e201c;
+  --color-graphite-950: #131512;
 
-  --color-clay-300: #f0a183;
-  --color-clay-400: #e17e5b;
-  --color-clay-500: #d0603c;
-  --color-clay-600: #b44c2c;
+  /* Sage — the single accent */
+  --color-sage-50: #eff4ec;
+  --color-sage-100: #dfe9d9;
+  --color-sage-200: #c2d4b8;
+  --color-sage-300: #9fba92;
+  --color-sage-400: #7d9c6d;
+  --color-sage-500: #628252;
+  --color-sage-600: #4d6941;
+  --color-sage-700: #3c5333;
 
-  --color-ochre-300: #f2c879;
-  --color-ochre-400: #e3a83f;
+  /* Taupe — the "waiting" signal, quieter than the green */
+  --color-taupe-300: #c8b89c;
+  --color-taupe-400: #ad9c7f;
+  --color-taupe-500: #817259;
 
-  --color-rust-400: #c0492f;
-  --color-rust-500: #a33b28;
+  /* Rose — reserved for hang up, mute, and unread */
+  --color-rose-300: #d19b98;
+  --color-rose-400: #bd6f6d;
+  --color-rose-500: #a24d4d;
+  --color-rose-600: #883f40;
 
-  --color-sage-400: #9db387;
-  --color-sage-500: #7d9468;
-
-  --font-display: "Fraunces", ui-serif, Georgia, "Times New Roman", serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
 
   --animate-float: float 8s ease-in-out infinite;
   --animate-pulse-ring: pulse-ring 2.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
@@ -50,7 +60,7 @@
   50%      { transform: translateY(-12px) rotate(-0.4deg) }
 }
 @keyframes pulse-ring {
-  0%        { transform: scale(0.85); opacity: 0.65 }
+  0%        { transform: scale(0.85); opacity: 0.6 }
   80%, 100% { transform: scale(2); opacity: 0 }
 }
 @keyframes bar {
@@ -76,77 +86,81 @@
   }
 
   body {
-    background-color: var(--color-bark-950);
-    color: var(--color-cream-100);
+    background-color: var(--color-sand-100);
+    color: var(--color-graphite-600);
     font-family: var(--font-sans);
+    font-weight: 500;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
+  /* Headings carry the weight — Bricolage is drawn for it */
   h1, h2, h3 {
     font-family: var(--font-display);
-    font-weight: 500;
-    letter-spacing: -0.015em;
-    /* Fraunces' optical-size and soft axes — warmer, less mechanical */
-    font-variation-settings: "SOFT" 30, "WONK" 1, "opsz" 40;
+    font-weight: 800;
+    letter-spacing: -0.028em;
+    color: var(--color-graphite-900);
   }
 
   ::selection {
-    background: var(--color-clay-500);
-    color: var(--color-cream-50);
+    background: var(--color-sage-200);
+    color: var(--color-graphite-900);
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-clay-400);
+    outline: 2px solid var(--color-sage-500);
     outline-offset: 3px;
-    border-radius: 3px;
+    border-radius: 4px;
   }
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--color-bark-700) transparent;
+    scrollbar-color: var(--color-sand-300) transparent;
   }
   *::-webkit-scrollbar { width: 8px; height: 8px }
   *::-webkit-scrollbar-track { background: transparent }
   *::-webkit-scrollbar-thumb {
-    background: var(--color-bark-700);
+    background: var(--color-sand-300);
     border-radius: 99px;
   }
-  *::-webkit-scrollbar-thumb:hover { background: var(--color-bark-600) }
+  *::-webkit-scrollbar-thumb:hover { background: var(--color-sand-400) }
 }
 
 /* ------------------------------------------------------------------ *
  * Surfaces
  * ------------------------------------------------------------------ */
 @layer components {
-  /* Paper grain — the whole page sits on it, so nothing reads as flat plastic */
+  /* Paper grain — keeps the beige from reading as flat #eee */
   .grain::after {
     content: "";
     position: absolute;
     inset: 0;
     pointer-events: none;
-    opacity: 0.05;
+    opacity: 0.035;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 
-  /* A single warm pool of light, low and wide — replaces the neon orbs */
-  .warmth {
+  /* A soft, wide wash of colour behind the fold. Never a neon orb. */
+  .wash {
     position: absolute;
     border-radius: 9999px;
     filter: blur(110px);
     pointer-events: none;
   }
 
-  /* Solid card. Flat fill, warm hairline. No glass, no glow. */
+  /* Solid card on paper. Hairline edge, shadow you feel more than see. */
   .card {
-    background: var(--color-bark-900);
-    border: 1px solid rgba(243, 234, 221, 0.09);
-    border-radius: 0.875rem;
+    background: var(--color-sand-50);
+    border: 1px solid var(--color-sand-300);
+    border-radius: 1rem;
+    box-shadow:
+      0 1px 2px rgba(30, 32, 28, 0.04),
+      0 14px 32px -20px rgba(30, 32, 28, 0.22);
   }
 
-  /* Hairline rule used between editorial rows */
+  /* Hairline rule between editorial rows */
   .rule {
-    border-top: 1px solid rgba(243, 234, 221, 0.1);
+    border-top: 1px solid var(--color-sand-300);
   }
 
   .btn-primary {
@@ -154,22 +168,28 @@
     align-items: center;
     justify-content: center;
     gap: 0.6rem;
-    padding: 0.9rem 1.6rem;
-    border-radius: 0.6rem;
-    font-weight: 550;
-    color: var(--color-cream-50);
-    background: var(--color-clay-500);
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.14) inset;
-    transition: background 0.18s ease, transform 0.18s ease;
+    padding: 0.9rem 1.7rem;
+    border-radius: 0.7rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--color-sand-50);
+    background: var(--color-sage-600);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset,
+                0 6px 16px -8px rgba(60, 83, 51, 0.7);
+    transition: background 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
   }
   .btn-primary:hover {
-    background: var(--color-clay-400);
+    background: var(--color-sage-500);
     transform: translateY(-1px);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.16) inset,
+                0 10px 22px -10px rgba(60, 83, 51, 0.75);
   }
   .btn-primary:active { transform: translateY(0) }
   .btn-primary:disabled {
-    background: var(--color-bark-700);
-    color: var(--color-cream-500);
+    background: var(--color-sand-300);
+    color: var(--color-graphite-400);
+    box-shadow: none;
     cursor: not-allowed;
     transform: none;
   }
@@ -179,17 +199,20 @@
     align-items: center;
     justify-content: center;
     gap: 0.55rem;
-    padding: 0.9rem 1.5rem;
-    border-radius: 0.6rem;
-    font-weight: 500;
-    color: var(--color-cream-200);
-    border: 1px solid rgba(243, 234, 221, 0.16);
+    padding: 0.9rem 1.6rem;
+    border-radius: 0.7rem;
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--color-graphite-800);
+    background: transparent;
+    border: 1px solid var(--color-sand-300);
     transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
   }
   .btn-ghost:hover {
-    background: rgba(243, 234, 221, 0.05);
-    border-color: rgba(243, 234, 221, 0.3);
-    color: var(--color-cream-50);
+    background: var(--color-sand-200);
+    border-color: var(--color-sand-400);
+    color: var(--color-graphite-900);
   }
 
   .reveal {

@@ -1,0 +1,35 @@
+name: GuffGaff CI/CD
+
+on: 
+  push:
+    brancehs: ["main"]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout-code
+        uses: actions/checkout@v4
+
+      - name: Deploy on Hostinger
+        uses: appleboy/ssh-action@v1.0.3
+        with: 
+          host: 45.90.108.68
+          username: root
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+            cd /root/GuffGaff
+            git pull
+            cd Backend
+            npm ci
+
+            cd ..
+            cd Frontend
+            npm ci
+            
+            cd .. 
+            pm2 restart Backend
+            pm2 restart Frontend
