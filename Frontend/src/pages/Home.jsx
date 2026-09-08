@@ -214,8 +214,8 @@ const Hero = ({ onStart, online }) => (
           className="animate-rise mt-8 max-w-md text-[1.05rem] leading-[1.75] text-graphite-600"
           style={{ animationDelay: "120ms" }}
         >
-          Guffgaff puts you face to face with one stranger at a time. No sign-up,
-          no profile, nothing kept afterwards. Press start and see who you get.
+          {/* Guffgaff puts you face to face with one stranger at a time. No sign-up, no profile, nothing kept afterwards.  */}
+          Press start and see who you get.
         </p>
 
         <div
@@ -406,7 +406,7 @@ const Footer = () => (
   <footer className="rule relative px-6 py-10">
     <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-5 text-[0.88rem] font-medium text-graphite-400 sm:flex-row">
       <Logo />
-      <p>Built with WebRTC. Be kind to whoever you meet.</p>
+      <p>Be kind to whoever you meet.</p>
       <nav className="flex gap-6 font-semibold">
         <a href="#why" className="transition-colors hover:text-sage-700">Why</a>
         <a href="#how" className="transition-colors hover:text-sage-700">How</a>
